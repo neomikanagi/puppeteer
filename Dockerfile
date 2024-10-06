@@ -19,8 +19,13 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 WORKDIR /usr/src/app
 
 # 复制 package.json 和 package-lock.json 并安装依赖
+
+# 清理 npm 缓存以防止问题
+RUN npm cache clean --force
+
+# 使用 --unsafe-perm 选项运行 npm install 避免权限问题
 COPY package*.json ./
-RUN npm install
+RUN npm install --unsafe-perm
 
 # 复制所有项目文件
 COPY . .
