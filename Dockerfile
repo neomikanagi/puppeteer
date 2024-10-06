@@ -21,17 +21,11 @@ WORKDIR /home/pptruser
 # 安装 Puppeteer
 RUN npm install puppeteer
 
-# 设置环境变量，配置 DBUS 地址
-ENV DBUS_SESSION_BUS_ADDRESS autolaunch:
-
-# 切换到 root 用户，安装 Puppeteer 的系统依赖
-USER root
-RUN npx puppeteer browsers install chrome --install-deps
-
-USER pptruser
-
-# 验证 Chromium 是否正确安装
+# 验证 Puppeteer 是否正确安装 Chromium
 RUN node -e "console.log(require('puppeteer').executablePath())"
 
-# 注释掉生成第三方许可文件的部分，避免报错
-# RUN node -e "require('child_process').execSync(require('puppeteer').executablePath() + ' --credits', {stdio: 'inherit'})" > THIRD_PARTY_NOTICES
+USER root
+# 注释掉手动安装浏览器依赖的步骤
+# RUN npx puppeteer browsers install chrome --install-deps
+
+USER pptruser
