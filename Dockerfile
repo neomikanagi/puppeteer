@@ -5,7 +5,9 @@ ENV LANG en_US.UTF-8
 
 # Install latest chrome dev package and fonts to support major charsets (Chinese, Japanese, Arabic, Hebrew, Thai and a few others)
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros \
+    && apt-get install -f -y \
+    && apt-get install -y --no-install-recommends chromium-browser \
+    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros \
     fonts-kacst fonts-freefont-ttf \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -20,9 +22,7 @@ WORKDIR /home/pptruser
 # 安装 Puppeteer
 RUN npm install puppeteer
 
-# 切换到 root 用户安装 Puppeteer 依赖
 USER root
-RUN npx puppeteer browsers install chrome --install-deps
 
 # 切换回 pptruser 用户
 USER pptruser
