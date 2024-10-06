@@ -58,7 +58,7 @@ jobs:
       
       # 构建并推送 Docker 镜像到 Docker Hub
       - name: Build and push
-        uses: docker/build-push-action@v5  # 使用 v5 而不是 v6
+        uses: docker/build-push-action@v6
         with:
           context: puppeteer/docker  # 指定 Puppeteer Dockerfile 的路径
           platforms: linux/arm64  # 构建多个平台
