@@ -2,32 +2,26 @@ name: Docker Image CI for Docker Hub
 
 on:
   schedule:
-    - cron: '0 3 * * 0'  # 每周日 03:00 自动运行
+    - cron: '0 3 * * 0'  # 每周日的凌晨 3 点自动运行
   workflow_dispatch:  # 手动触发
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04  # 使用稳定版本 Ubuntu 24.04
     strategy:
       matrix:
-        platform: [ 'linux/arm64' ]  # 使用 Matrix 策略构建多个平台
+        platform: [ 'linux/armv7', 'linux/arm64' ]  # 使用 Matrix 策略构建多个平台
 
     steps:
-      # 克隆你的 Puppeteer 仓库
+      # 检出当前仓库的代码
       - name: Checkout this repository
         uses: actions/checkout@v4
-      
-      # 查找并使用 Puppeteer 仓库中的 Dockerfile
-      - name: Clone Puppeteer repository
-        run: |
-          git clone https://github.com/puppeteer/puppeteer.git
-          cd puppeteer/docker
 
       # 设置 QEMU，以支持多平台构建
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: all  # 支持多平台
+          platforms: all  # 确保支持多平台
 
       # 设置 Buildx
       - name: Set up Docker Buildx
@@ -36,32 +30,33 @@ jobs:
       # 设置构建日期
       - name: Set build date
         id: date
-        run: echo "BUILD_DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+        run: echo "BUILD_DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV  # 设置构建日期为 year.month.date
 
-      # 设置 Docker 镜像的元数据
+      # 设置 Docker 镜像元数据
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            your-dockerhub-username/puppeteer  # 使用你的 Docker Hub 用户名和镜像名称
+            neowitch/puppeteer 
           tags: |
-            type=raw,value=${{ env.BUILD_DATE }}
-            type=raw,value=latest
+            type=raw,value=${{ env.BUILD_DATE }}  # 使用日期作为标签
+            type=raw,value=latest  # 使用 latest 标签
 
       # 登录 Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}  # 在 GitHub Secrets 中配置你的 Docker Hub 用户名
-          password: ${{ secrets.DOCKER_PASSWORD }}  # 在 GitHub Secrets 中配置你的 Docker Hub 密码
-      
-      # 构建并推送 Docker 镜像到 Docker Hub
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}  # 在 GitHub Secrets 中设置
+          password: ${{ secrets.DOCKER_PASSWORD }}  # 在 GitHub Secrets 中设置
+
+      # 构建并推送 Docker 镜像
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: puppeteer/docker  # 指定 Puppeteer Dockerfile 的路径
-          platforms: linux/arm64  # 构建多个平台
+          context: .  # 使用当前目录作为 Docker 构建上下文
+          platforms: linux/armv7,linux/arm64  # 指定多个平台
           push: true
-          tags: ${{ steps.meta.outputs.tags }}  # 使用日期和 latest 标签
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}  # 使用构建元数据中的标签
+          labels: ${{ steps.meta.outputs.labels }}  # 使用构建元数据中的标签
