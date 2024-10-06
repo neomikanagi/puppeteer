@@ -1,14 +1,25 @@
-# 使用官方 Puppeteer 镜像
-FROM ghcr.io/puppeteer/puppeteer:latest
+FROM node:20
 
-# 设置工作目录
-WORKDIR /usr/src/app
+# Configure default locale (important for chrome-headless-shell).
+ENV LANG en_US.UTF-8
 
-# 复制 package.json 和 package-lock.json 并安装依赖
-COPY package*.json ./
+# Install latest chrome dev package and fonts to support major charsets (Chinese, Japanese, Arabic, Hebrew, Thai and a few others)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros \
+    fonts-kacst fonts-freefont-ttf
 
-# 安装项目依赖
-RUN npm install
+# Add pptruser.
+RUN groupadd -r pptruser && useradd -rm -g pptruser -G audio,video pptruser
 
-# 复制项目代码
-COPY . .
+USER pptruser
+
+WORKDIR /home/pptruser
+
+# 安装 Puppeteer 及其浏览器依赖
+RUN npm install puppeteer \
+    && npx puppeteer browsers install chrome --install-deps
+
+USER root
+
+# 返回 pptruser
+USER pptruser
